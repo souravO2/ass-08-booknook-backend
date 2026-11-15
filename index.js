@@ -15,7 +15,7 @@ app.use(express.json());
 const client = new MongoClient(process.env.MDB_URI);
 export async function connectToMongoDB() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("Successfully connected to MongoDB");
     return client;
   } catch (error) {
