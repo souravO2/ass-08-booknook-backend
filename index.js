@@ -88,7 +88,22 @@ app.get("/top-categories", async (req, res) => {
   res.send(result);
 });
 
+app.get("/my-books/:email", async (req, res) => {
+  const { email } = req.params;
+  const result = await booksCollection
+    .find({ userEmail: email })
+    .sort({ createdAt: -1 })
+    .toArray();
+  res.send(result);
+});
 
+app.delete("/my-books/:id", async (req, res) => {
+  const { id } = req.params;
+  const result = await booksCollection.deleteOne({
+    _id: new ObjectId(id),
+  });
+  res.send(result);
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
