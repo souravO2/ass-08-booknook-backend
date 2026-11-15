@@ -35,6 +35,25 @@ app.get("/", (req, res) => {
   res.send("Welcome to BookNook API");
 });
 
+// books routes
+app.post("/add-book", async (req, res) => {
+  const data = req.body;
+  const totalCopies = Number(data.totalCopies);
+  const book = {
+    ...data,
+    totalCopies,
+    availableCopies: totalCopies,
+    createdAt: new Date(),
+  };
+  const result = await booksCollection.insertOne(book);
+  res.send(result);
+});
+
+app.get("/all-books", async (req, res) => {
+  const result = await booksCollection.find().toArray();
+  res.send(result);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
