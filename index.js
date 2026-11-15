@@ -179,6 +179,27 @@ app.get("/my-borrows/:email", async (req, res) => {
   res.send(result);
 });
 
+app.delete("/my-borrows/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!ObjectId.isValid(id)) {
+    return res.status(404).send({ msg: "Borrow not found" });
+  }
+  const deleted = await borrowsCollection.findOneAndDelete({
+    _id: new ObjectId(id),
+  });
+  const borrow = deleted?.value ?? deleted;
+  if (!borrow) return res.status(404).send({ msg: "Borrow not found" });
+  await booksCollection.updateOne(
+    {
+      _id: new ObjectId(borrow.bookId),
+    },
+    {
+      $inc: { availableCopies: 1 },
+    },
+  );
+  res.send({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
