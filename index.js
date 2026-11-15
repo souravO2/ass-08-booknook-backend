@@ -69,6 +69,27 @@ app.get("/new-arrivals", async (req, res) => {
   res.send(result);
 });
 
+app.get("/top-categories", async (req, res) => {
+  const result = await booksCollection
+    .aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+          createdAt: { $max: "$createdAt" },
+        },
+      },
+      { $sort: { count: -1, createdAt: -1 } },
+      { $project: { _id: 0, name: "$_id", count: 1 } },
+    ])
+    .limit(5)
+    .toArray();
+
+  res.send(result);
+});
+
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
