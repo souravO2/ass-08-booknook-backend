@@ -54,6 +54,21 @@ app.get("/all-books", async (req, res) => {
   res.send(result);
 });
 
+app.get("/all-books/:id", async (req, res) => {
+  const { id } = req.params;
+  const result = await booksCollection.findOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+
+app.get("/new-arrivals", async (req, res) => {
+  const result = await booksCollection
+    .find()
+    .sort({ createdAt: -1 })
+    .limit(6)
+    .toArray();
+  res.send(result);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
