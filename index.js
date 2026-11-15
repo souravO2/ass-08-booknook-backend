@@ -129,6 +129,56 @@ app.patch("/my-books/:id", async (req, res) => {
   res.send(result);
 });
 
+//book borrowing
+const LOAN_DAYS = 7;
+
+app.post("/borrow-book", async (req, res) => {
+  const { bookId, userEmail } = req.body;
+
+  if (!ObjectId.isValid(bookId) || !userEmail) {
+    return res.status(400).send({ msg: "Invaid request" });
+  }
+  const book = await booksCollection.findOne({ _id: new ObjectId(bookId) });
+  if (!book) return res.status(404).send({ msg: "Book not found" });
+
+  const borrow = {
+    bookId,
+    bookTitle: book.title,
+    bookImage: book.bookImage,
+    userEmail,
+    borrowDate: new Date(),
+    returnDate: new Date(Date.now() + LOAN_DAYS * 24 * 3600 * 1000),
+  };
+  try {
+    await borrowsCollection.insertOne(borrow);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res
+        .status(409)
+        .send({ msg: "You have already borrowed this book" });
+    }
+    throw err;
+  }
+  const result = await booksCollection.updateOne(
+    {
+      _id: book._id,
+      availableCopies: { $gt: 0 },
+    },
+    { $inc: { availableCopies: -1 } },
+  );
+  if (result.modifiedCount === 0) {
+    await borrowsCollection.deleteOne({ _id: borrow._id });
+    return res.send({ msg: "no copies available" });
+  }
+  res.send(borrow);
+});
+
+app.get("/my-borrows/:email", async (req, res) => {
+  const { email } = req.params;
+  const result = await borrowsCollection.find({ userEmail: email }).toArray();
+  res.send(result);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
