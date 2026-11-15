@@ -105,6 +105,30 @@ app.delete("/my-books/:id", async (req, res) => {
   res.send(result);
 });
 
+app.patch("/my-books/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  const book = await booksCollection.findOne({ _id: new ObjectId(id) });
+  if (!book) {
+    return res.status(404).send({ msg: "Book not Found" });
+  }
+  const borrowedCopies = book.totalCopies - book.availableCopies;
+  const newTotalCopies = Number(updatedData.totalCopies);
+  const result = await booksCollection.updateOne(
+    {
+      _id: new ObjectId(id),
+    },
+    {
+      $set: {
+        ...updatedData,
+        totalCopies: newTotalCopies,
+        availableCopies: newTotalCopies - borrowedCopies,
+      },
+    },
+  );
+  res.send(result);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
